@@ -12,5 +12,30 @@
     <vm:MainViewModel />
   </Design.DataContext>
 
-  <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+  <StackPanel>
+      <Button Click="Button_OnClick">Initialise</Button>
+      <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      <StackPanel>
+          <ListBox SelectionChanged="SelectingItemsControl_OnSelectionChanged" ItemsSource="{Binding Namespaces}">
+              <ListBox.ItemTemplate>
+                  <DataTemplate>
+                      <Border BorderBrush="Blue" BorderThickness="1" 
+                              CornerRadius="4" Padding="2">
+                          <TextBlock Text="{Binding}"/>
+                      </Border>
+                  </DataTemplate>
+              </ListBox.ItemTemplate>
+          </ListBox>
+          <ListBox SelectionChanged="OnSelectPod" ItemsSource="{Binding Pods}">
+              <ListBox.ItemTemplate>
+                  <DataTemplate>
+                      <Border BorderBrush="Red" BorderThickness="1" 
+                              CornerRadius="4" Padding="2">
+                          <TextBlock Text="{Binding}"/>
+                      </Border>
+                  </DataTemplate>
+              </ListBox.ItemTemplate>
+          </ListBox>
+      </StackPanel>
+  </StackPanel>
 </UserControl>
