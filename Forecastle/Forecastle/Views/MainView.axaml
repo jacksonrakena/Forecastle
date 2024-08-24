@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:Forecastle.ViewModels"
+             xmlns:controls="clr-namespace:Forecastle.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Forecastle.Views.MainView"
              x:DataType="vm:MainViewModel">
@@ -15,18 +16,48 @@
   <StackPanel>
       <Button Click="Button_OnClick">Initialise</Button>
       <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-      <StackPanel>
+      <ItemsControl ItemsSource="{Binding Pods}">
+          <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                  <Canvas Width="700" Height="700" Background="DarkGray" Margin="0"/>
+              </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.Styles>
+              <Style Selector="ContentPresenter" x:DataType="vm:PodInfo">
+                  <Setter Property="Canvas.Left" Value="{Binding X}"/>
+                  <Setter Property="Canvas.Top" Value="{Binding Y}"/>
+              </Style>
+          </ItemsControl.Styles>
+          <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                  <controls:MovableBorder OnMove="MovableBorder_OnOnMove" BorderBrush="White" BorderThickness="1" 
+                                 CornerRadius="4" Padding="8">
+                      <TextBlock>
+                          <Run Text="{Binding Name}"></Run>
+                          <Run Text="&#x0a;"></Run>
+                          <Run Text="{Binding Namespace}"></Run>
+                      </TextBlock>
+                  </controls:MovableBorder>
+              </DataTemplate>
+          </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <!--<StackPanel>
           <ListBox SelectionChanged="SelectingItemsControl_OnSelectionChanged" ItemsSource="{Binding Namespaces}">
               <ListBox.ItemTemplate>
                   <DataTemplate>
                       <Border BorderBrush="Blue" BorderThickness="1" 
                               CornerRadius="4" Padding="2">
-                          <TextBlock Text="{Binding}"/>
+                          <TextBlock>
+                              <Run Text="{Binding Namespace}"></Run>,
+                              Pods=
+                              <Run Text="{Binding PodCount}"></Run>,
+                              Deployments=<Run Text="{Binding DeploymentCount}"></Run>
+                          </TextBlock>
                       </Border>
                   </DataTemplate>
               </ListBox.ItemTemplate>
-          </ListBox>
-          <ListBox SelectionChanged="OnSelectPod" ItemsSource="{Binding Pods}">
+          </ListBox>-->
+          <!--<ListBox SelectionChanged="OnSelectPod" ItemsSource="{Binding Pods}">
               <ListBox.ItemTemplate>
                   <DataTemplate>
                       <Border BorderBrush="Red" BorderThickness="1" 
@@ -36,6 +67,6 @@
                   </DataTemplate>
               </ListBox.ItemTemplate>
           </ListBox>
-      </StackPanel>
+      </StackPanel>-->
   </StackPanel>
 </UserControl>
