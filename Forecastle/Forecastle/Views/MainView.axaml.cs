@@ -71,17 +71,24 @@ public partial class MainView : UserControl
 
     private void MovableBorder_OnOnMove(object? sender, TranslateTransform e)
     {
-        var mv = (sender as MovableBorder).Parent.DataContext as PodInfo;
+        var mv = (sender as MovableBorder).Parent.DataContext as MapNode;
         if (e == null)
         {
-            TryOpenPod(mv.Name, mv.Namespace);
+            //TryOpenPod(mv.Name, mv.Namespace);
             return;
         }
-        ((MainViewModel)DataContext).Pods = ((MainViewModel)DataContext).Pods.Select(af =>
+        ((MainViewModel)DataContext).MapNodes = ((MainViewModel)DataContext).MapNodes.Select(af =>
         {
-            if (af.Name != mv.Name || af.Namespace != mv.Namespace) return af;
+            if (af.Id != mv.Id) return af;
             return af with { X = af.X + e.X, Y = af.Y + e.Y };
         }).ToList();
         //Console.WriteLine(mv.ToString());
+    }
+
+    private void RecalculateVisiblePods(object? sender, RoutedEventArgs e)
+    {
+        var nsn = ((sender as CheckBox).Content as string);
+        var c = ((sender as CheckBox).IsChecked);
+        ((MainViewModel)DataContext).RecalculateVisiblePods(nsn, c ?? false);
     }
 }

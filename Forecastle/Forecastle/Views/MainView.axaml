@@ -16,31 +16,44 @@
   <StackPanel>
       <Button Click="Button_OnClick">Initialise</Button>
       <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-      <ItemsControl ItemsSource="{Binding Pods}">
-          <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                  <Canvas Width="700" Height="700" Background="DarkGray" Margin="0"/>
-              </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.Styles>
-              <Style Selector="ContentPresenter" x:DataType="vm:PodInfo">
-                  <Setter Property="Canvas.Left" Value="{Binding X}"/>
-                  <Setter Property="Canvas.Top" Value="{Binding Y}"/>
-              </Style>
-          </ItemsControl.Styles>
-          <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                  <controls:MovableBorder OnMove="MovableBorder_OnOnMove" BorderBrush="White" BorderThickness="1" 
-                                 CornerRadius="4" Padding="8">
-                      <TextBlock>
-                          <Run Text="{Binding Name}"></Run>
-                          <Run Text="&#x0a;"></Run>
-                          <Run Text="{Binding Namespace}"></Run>
-                      </TextBlock>
-                  </controls:MovableBorder>
-              </DataTemplate>
-          </ItemsControl.ItemTemplate>
-      </ItemsControl>
+      <StackPanel Orientation="Horizontal">
+          <StackPanel>
+              <TextBlock>Namespaces</TextBlock>
+              <ItemsControl ItemsSource="{Binding Namespaces}">
+                  <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                          <CheckBox IsCheckedChanged="RecalculateVisiblePods" IsChecked="{Binding Selected, Mode=TwoWay}" Content="{Binding Namespace}"></CheckBox>
+                      </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+              </ItemsControl>
+          </StackPanel>
+          <ItemsControl ItemsSource="{Binding MapNodes}">
+              <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                      <Canvas Width="800" Height="700" Background="DarkGray" Margin="0"/>
+                  </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.Styles>
+                  <Style Selector="ContentPresenter" x:DataType="vm:MapNode">
+                      <Setter Property="Canvas.Left" Value="{Binding X}"/>
+                      <Setter Property="Canvas.Top" Value="{Binding Y}"/>
+                  </Style>
+              </ItemsControl.Styles>
+              <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                      <controls:MovableBorder OnMove="MovableBorder_OnOnMove" BorderBrush="White" BorderThickness="1" 
+                                              CornerRadius="4" Padding="8">
+                          <TextBlock>
+                              <Run Text="{Binding Name}"></Run>
+                              <Run Text="&#x0a;"></Run>
+                              <Run Text="{Binding mnt}"></Run>
+                          </TextBlock>
+                      </controls:MovableBorder>
+                  </DataTemplate>
+              </ItemsControl.ItemTemplate>
+          </ItemsControl>
+      </StackPanel>
+      
       <!--<StackPanel>
           <ListBox SelectionChanged="SelectingItemsControl_OnSelectionChanged" ItemsSource="{Binding Namespaces}">
               <ListBox.ItemTemplate>
