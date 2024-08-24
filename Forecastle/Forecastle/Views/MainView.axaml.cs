@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
@@ -22,6 +23,20 @@ public partial class MainView : UserControl
     private void Button_OnClick(object? sender, RoutedEventArgs e)
     {
         ((MainViewModel)DataContext).InitKubernetes();
+        
+        ((INotifyPropertyChanged)DataContext).PropertyChanged += (sender, args) =>
+        {
+            if (args.PropertyName == "MapNodes")
+            {
+                ResourceMap2.Children.Clear();
+                foreach (var n in ((MainViewModel)DataContext).MapNodes)
+                {
+                    var pmn = new PodMapNode();
+                    pmn.DataContext = new PodInfo(n.Name, "test", n.X, n.Y);
+                    ResourceMap2.Children.Add(pmn);
+                }
+            }
+        };
     }
 
     private void SelectingItemsControl_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
