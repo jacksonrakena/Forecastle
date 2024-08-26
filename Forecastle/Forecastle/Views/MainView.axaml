@@ -22,76 +22,15 @@
               <ItemsControl ItemsSource="{Binding Namespaces}">
                   <ItemsControl.ItemTemplate>
                       <DataTemplate>
-                          <CheckBox IsCheckedChanged="RecalculateVisiblePods" IsChecked="{Binding Selected, Mode=TwoWay}" Content="{Binding Namespace}"></CheckBox>
+                          <CheckBox IsCheckedChanged="RecalculateVisiblePods" IsChecked="{Binding Selected, Mode=TwoWay}" 
+                                    Content="{Binding Namespace}"></CheckBox>
                       </DataTemplate>
                   </ItemsControl.ItemTemplate>
               </ItemsControl>
           </StackPanel>
+          
           <Canvas Name="ResourceMap2" Width="800" Height="700" Background="DarkGray" Margin="0">
-              <controls:PodMapNode Canvas.Top="100" Canvas.Left="300" >
-                  <TextBlock>test</TextBlock>
-              </controls:PodMapNode>
           </Canvas>
-          <!--<ItemsControl ItemsSource="{Binding MapNodes}">
-              <ItemsControl.ItemsPanel>
-                  <ItemsPanelTemplate>
-                      <Canvas Name="ResourceMap" Width="800" Height="700" Background="DarkGray" Margin="0"/>
-                  </ItemsPanelTemplate>
-              </ItemsControl.ItemsPanel>
-              <ItemsControl.Styles>
-                  <Style Selector="ContentPresenter" x:DataType="vm:MapNode">
-                      <Setter Property="Canvas.Left" Value="{Binding X}"/>
-                      <Setter Property="Canvas.Top" Value="{Binding Y}"/>
-                  </Style>
-              </ItemsControl.Styles>
-              <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                      <controls:MovableBorder OnMove="MovableBorder_OnOnMove" BorderBrush="White" BorderThickness="1" 
-                                              CornerRadius="4" Padding="8" Background="White" Width="80" Height="80">
-                          <ToolTip.Tip>
-                              <StackPanel>
-                                  <TextBlock FontSize="16" Text="{Binding Name}"></TextBlock>
-                                  <TextBlock>Some explanation here.</TextBlock>
-                              </StackPanel>
-                          </ToolTip.Tip>
-                          <StackPanel HorizontalAlignment="Center">
-                              <TextBlock Text="{Binding mnt}"></TextBlock>
-                              <TextBlock FontSize="8" TextWrapping="Wrap">
-                                  <Run Text="{Binding Name}"></Run>
-                              </TextBlock>
-                          </StackPanel>
-                      </controls:MovableBorder>
-                  </DataTemplate>
-              </ItemsControl.ItemTemplate>
-          </ItemsControl>-->
       </StackPanel>
-      
-      <!--<StackPanel>
-          <ListBox SelectionChanged="SelectingItemsControl_OnSelectionChanged" ItemsSource="{Binding Namespaces}">
-              <ListBox.ItemTemplate>
-                  <DataTemplate>
-                      <Border BorderBrush="Blue" BorderThickness="1" 
-                              CornerRadius="4" Padding="2">
-                          <TextBlock>
-                              <Run Text="{Binding Namespace}"></Run>,
-                              Pods=
-                              <Run Text="{Binding PodCount}"></Run>,
-                              Deployments=<Run Text="{Binding DeploymentCount}"></Run>
-                          </TextBlock>
-                      </Border>
-                  </DataTemplate>
-              </ListBox.ItemTemplate>
-          </ListBox>-->
-          <!--<ListBox SelectionChanged="OnSelectPod" ItemsSource="{Binding Pods}">
-              <ListBox.ItemTemplate>
-                  <DataTemplate>
-                      <Border BorderBrush="Red" BorderThickness="1" 
-                              CornerRadius="4" Padding="2">
-                          <TextBlock Text="{Binding}"/>
-                      </Border>
-                  </DataTemplate>
-              </ListBox.ItemTemplate>
-          </ListBox>
-      </StackPanel>-->
   </StackPanel>
 </UserControl>
