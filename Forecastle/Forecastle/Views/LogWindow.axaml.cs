@@ -13,6 +13,7 @@ public partial class LogWindow : Window
 {
     public LogWindow()
     {
+        this.Closing += (sender, args) => ((LogWindowViewModel)DataContext).Destroy();
         InitializeComponent();
         Task.Run(async () =>
         {
@@ -29,5 +30,11 @@ public partial class LogWindow : Window
                 await Task.Delay(1000);   
             }
         });
+    }
+    public void Init()
+    {
+        foreach (var v in ((LogWindowViewModel)DataContext).Containers)
+        {
+        }
     }
 }

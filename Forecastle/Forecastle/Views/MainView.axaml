@@ -15,6 +15,7 @@
 
   <StackPanel>
       <Button Click="Button_OnClick">Initialise</Button>
+      <Button Click="LoadDependencies">Load dependencies</Button>
       <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
       <StackPanel Orientation="Horizontal">
           <StackPanel>

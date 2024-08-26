@@ -26,9 +26,17 @@ public partial class NamespaceInfo : ObservableObject
     [ObservableProperty] private bool _selected = true;
 }
 public record MapNode(Guid Id, string Namespace, double X, double Y, MainViewModel Owner);
-public record PodNode(Guid Id, string Name, string Namespace, double X, double Y, MainViewModel Owner) : MapNode(Id, Namespace, X, Y, Owner);
+public record PodNode(Guid Id, V1Pod Pod, string Name, string Namespace, double X, double Y, MainViewModel Owner) : MapNode(Id, Namespace, X, Y, Owner);
 
-public record DeploymentNode(Guid Id, string Name, string Namespace, V1Deployment Deployment, double X, double Y, MainViewModel Owner) : MapNode(Id, Namespace, X, Y, Owner);
+public record DeploymentNode(Guid Id, string Name, string Namespace, V1Deployment Deployment, double X, double Y, MainViewModel Owner) : MapNode(Id, Namespace, X, Y, Owner)
+{
+    public IEnumerable<string> GetPvcDependencies()
+    {
+        return (Deployment.Spec?.Template?.Spec?.Volumes ?? Enumerable.Empty<V1Volume>())
+            .Where(rc => rc.PersistentVolumeClaim != null)
+            .Select(rc => rc.PersistentVolumeClaim.ClaimName);
+    }
+}
 
 public record PersistentVolumeClaimNode(
     Guid Id,
@@ -52,11 +60,10 @@ public partial class MainViewModel : ViewModelBase
 {
     [ObservableProperty] private string _greeting = "Jackson's Very Experimental Kubernetes Manager";
     [ObservableProperty] List<NamespaceInfo> _namespaces = new List<NamespaceInfo>();
-    [ObservableProperty] private string _selectedNamespace;
     public Kubernetes Kubernetes;
     [ObservableProperty]
     IEnumerable<MapNode> _mapNodes = Enumerable.Empty<MapNode>();
-    List<MapNode> _allnodes = new List<MapNode>();
+    List<MapNode> _allResources = new List<MapNode>();
     
     public void OnNodeClicked(MapNode caller)
     {
@@ -65,13 +72,15 @@ public partial class MainViewModel : ViewModelBase
             try
             {
                 var window = new LogWindow();
-                window.DataContext = new LogWindowViewModel(pi.Name, pi.Namespace,this);
+
+                window.DataContext = new LogWindowViewModel(pi,this);
                 Dispatcher.UIThread.Invoke(() =>
                 {
                     window.Show(
                         (((IClassicDesktopStyleApplicationLifetime)Application.Current.ApplicationLifetime)
                             .MainWindow));
                 });
+                window.Init();
             }
             catch (Exception ed)
             {
@@ -91,7 +100,7 @@ public partial class MainViewModel : ViewModelBase
             .Select(e => e.Namespace)
             .ToList();
 
-        MapNodes = _allnodes.Where(e => selectedN.Contains(e.Namespace)).ToList();
+        MapNodes = _allResources.Where(e => selectedN.Contains(e.Namespace)).ToList();
     }
 
     public void OnTryMoveNode(MapNode caller, TranslateTransform? transform)
@@ -101,7 +110,7 @@ public partial class MainViewModel : ViewModelBase
             OnNodeClicked(caller);
             return;
         }
-        _allnodes = _allnodes.Select(p =>
+        _allResources = _allResources.Select(p =>
         {
             if (p.Id == caller.Id) return p with { X = p.X + transform.X, Y = p.Y + transform.Y };
             return p;
@@ -126,11 +135,11 @@ public partial class MainViewModel : ViewModelBase
                 var pvcs = (await Kubernetes.ListPersistentVolumeClaimForAllNamespacesAsync()).Items.Select(e =>
                     new PersistentVolumeClaimNode(Guid.NewGuid(), e.Name(), e.Namespace(), e, r.Next(0, 500), r.Next(0, 500), this)).ToList();
 
-                _allnodes.AddRange(pvcs);
+                _allResources.AddRange(pvcs);
 
                 var pvs = (await Kubernetes.ListPersistentVolumeAsync()).Items.Select(e =>
                     new PersistentVolumeNode(Guid.NewGuid(), e.Name(), e.Namespace(), e, r.Next(0, 500), r.Next(0, 500), this)).ToList();
-                _allnodes.AddRange(pvs);
+                _allResources.AddRange(pvs);
                 
                 var dpl = await Kubernetes.ListDeploymentForAllNamespacesAsync();
                 foreach (var d in dpl.Items)
@@ -146,18 +155,17 @@ public partial class MainViewModel : ViewModelBase
                         {
                             Console.WriteLine(e);
                         }
-
                     }
                 }
-                _allnodes.AddRange(dpl.Items.Select(d => new DeploymentNode(Guid.NewGuid(), d.Name(), d.Namespace(), d, r.Next(0,500), r.Next(0,500), this)).ToList());
+                _allResources.AddRange(dpl.Items.Select(d => new DeploymentNode(Guid.NewGuid(), d.Name(), d.Namespace(), d, r.Next(0,500), r.Next(0,500), this)).ToList());
 
                 var allpods = (await Kubernetes.ListPodForAllNamespacesAsync())
                     .Items
-                    .Select(e => new PodNode(Guid.NewGuid(), e.Name(), e.Namespace(), r.Next(0, 500), r.Next(0, 500), this))
+                    .Select(e => new PodNode(Guid.NewGuid(), e, e.Name(), e.Namespace(), r.Next(0, 500), r.Next(0, 500), this))
                     .ToList();
                 
                 Console.WriteLine($"Retrieved {allpods.Count} pods");
-                _allnodes.AddRange(allpods);
+                _allResources.AddRange(allpods);
 
                 var namespaces = (await Kubernetes.CoreV1.ListNamespaceAsync().ConfigureAwait(false))
                     .Items.Select(e => new NamespaceInfo { Namespace = e.Name() })

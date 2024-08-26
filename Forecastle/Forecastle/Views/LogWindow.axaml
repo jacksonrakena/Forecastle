@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:Forecastle.ViewModels"
+        xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Runtime"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Forecastle.Views.LogWindow"
         x:DataType="vm:LogWindowViewModel"
@@ -12,10 +13,23 @@
         WindowStartupLocation="CenterOwner">
     <Panel>
         <TextBlock Text="{Binding PodName}"></TextBlock>
-        <Panel Margin="40">
-                <ScrollViewer Name="LogScrollable">
-                    <TextBlock Name="LogText" FontFamily="{StaticResource ConsoleFont}" Text="{Binding Log}"></TextBlock>
-                </ScrollViewer>
-        </Panel>
+        <TabControl Name="Containers" ItemsSource="{Binding Containers, Mode=OneWay}">
+            <TabControl.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Header}" />
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <DataTemplate DataType="vm:LogWindowTab">
+                    <DockPanel LastChildFill="True">
+                        <Panel Margin="40">
+                            <ScrollViewer Name="LogScrollable">
+                                <TextBlock Name="LogText" FontFamily="{StaticResource ConsoleFont}" Text="{Binding Content, Mode=OneWay}"></TextBlock>
+                            </ScrollViewer>
+                        </Panel>
+                    </DockPanel>
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
     </Panel>
 </Window>
