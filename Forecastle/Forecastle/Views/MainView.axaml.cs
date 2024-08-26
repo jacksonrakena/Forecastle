@@ -31,9 +31,26 @@ public partial class MainView : UserControl
                 ResourceMap2.Children.Clear();
                 foreach (var n in ((MainViewModel)DataContext).MapNodes)
                 {
-                    var pmn = new PodMapNode();
-                    pmn.DataContext = new PodInfo(n.Name, "test", n.X, n.Y);
-                    ResourceMap2.Children.Add(pmn);
+                    switch (n)
+                    {
+                        case PodNode pi:
+                        {
+                            var pmn = new PodMapNode
+                            {
+                                DataContext = pi
+                            };
+                            ResourceMap2.Children.Add(pmn);
+                            break;
+                        }
+                        case PersistentVolumeClaimNode pvc:
+                            ResourceMap2.Children.Add(new PersistentVolumeClaimMapNode
+                            {
+                                DataContext = pvc
+                            });
+                            break;
+                        case PersistentVolumeNode pv:
+                            break;
+                    }
                 }
             }
         };
@@ -42,26 +59,6 @@ public partial class MainView : UserControl
     private void SelectingItemsControl_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         ((MainViewModel)DataContext).SelectNamespace((e.AddedItems[0] as NamespaceInfo).Namespace);
-    }
-
-    public void TryOpenPod(string pod, string ns)
-    {
-        try
-        {
-            var vm = ((MainViewModel)DataContext);
-            var window = new LogWindow();
-            window.DataContext = new LogWindowViewModel(pod, ns,vm);
-            Dispatcher.UIThread.Invoke(() =>
-            {
-                window.Show(
-                    (((IClassicDesktopStyleApplicationLifetime)Application.Current.ApplicationLifetime)
-                        .MainWindow));
-            });
-        }
-        catch (Exception ed)
-        {
-            Console.WriteLine(ed);
-        }
     }
 
     private void OnSelectPod(object? sender, SelectionChangedEventArgs e)
@@ -86,18 +83,7 @@ public partial class MainView : UserControl
 
     private void MovableBorder_OnOnMove(object? sender, TranslateTransform e)
     {
-        var mv = (sender as MovableBorder).Parent.DataContext as MapNode;
-        if (e == null)
-        {
-            //TryOpenPod(mv.Name, mv.Namespace);
-            return;
-        }
-        ((MainViewModel)DataContext).MapNodes = ((MainViewModel)DataContext).MapNodes.Select(af =>
-        {
-            if (af.Id != mv.Id) return af;
-            return af with { X = af.X + e.X, Y = af.Y + e.Y };
-        }).ToList();
-        //Console.WriteLine(mv.ToString());
+
     }
 
     private void RecalculateVisiblePods(object? sender, RoutedEventArgs e)

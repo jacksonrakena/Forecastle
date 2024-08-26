@@ -8,15 +8,15 @@ using Forecastle.ViewModels;
 
 namespace Forecastle.Controls;
 
-public partial class PodMapNode : UserControl
+public partial class PersistentVolumeClaimMapNode : UserControl
 {
-    public PodMapNode()
+    public PersistentVolumeClaimMapNode()
     {
         InitializeComponent();
     }
 
     private void OnMove(object? sender, TranslateTransform e)
     {
-        ((PodNode)this.DataContext).Owner.OnTryMoveNode((MapNode)this.DataContext, e);
+        ((PersistentVolumeClaimNode)this.DataContext).Owner.OnTryMoveNode((MapNode)this.DataContext, e);
     }
 }

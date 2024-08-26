@@ -19,4 +19,11 @@
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1"/>
         <PackageReference Include="KubernetesClient" Version="14.0.9" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Controls\PersistentVolumeClaimMapNode.axaml.cs">
+        <DependentUpon>PersistentVolumeClaimMapNode.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
 </Project>

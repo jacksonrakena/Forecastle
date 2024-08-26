@@ -16,7 +16,7 @@ public class MovableBorder : Border
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         _isPressed = true;
-        _positionInBlock = e.GetPosition(Parent as Visual);
+        _positionInBlock = e.GetPosition(Parent.Parent as Visual);
 		
         if (_transform != null!) 
             _positionInBlock = new Point(
@@ -29,8 +29,8 @@ public class MovableBorder : Border
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         _isPressed = false;
-        OnMove?.Invoke(this,RenderTransform as TranslateTransform);
-        RenderTransform = null;
+        OnMove?.Invoke(this,(this.Parent as Visual).RenderTransform as TranslateTransform);
+        (this.Parent as Visual).RenderTransform = null;
         _positionInBlock = default;
         _transform = null!;
 		
@@ -45,13 +45,13 @@ public class MovableBorder : Border
         if (Parent == null)
             return;
 
-        var currentPosition = e.GetPosition(Parent as Visual);
+        var currentPosition = e.GetPosition(Parent.Parent as Visual);
 
         var offsetX = currentPosition.X -  _positionInBlock.X;
         var offsetY = currentPosition.Y - _positionInBlock.Y;
 
         _transform = new TranslateTransform(offsetX, offsetY);
-        RenderTransform = _transform;
+        (this.Parent as Visual).RenderTransform = _transform;
 		
         base.OnPointerMoved(e);
     }

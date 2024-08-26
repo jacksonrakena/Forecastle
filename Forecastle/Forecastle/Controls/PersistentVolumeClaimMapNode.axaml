@@ -2,11 +2,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="using:Forecastle.Controls"
         xmlns:viewModels="clr-namespace:Forecastle.ViewModels"
-        x:Class="Forecastle.Controls.PodMapNode"
-        x:DataType="viewModels:PodNode">
+        x:Class="Forecastle.Controls.PersistentVolumeClaimMapNode"
+        x:DataType="viewModels:PersistentVolumeClaimNode">
     
     <UserControl.Styles>
-        <Style Selector="controls|PodMapNode" x:DataType="viewModels:PodNode">
+        <Style Selector="controls|PersistentVolumeClaimMapNode" x:DataType="viewModels:PodNode">
             <Setter Property="Canvas.Left" Value="{Binding X}"/>
             <Setter Property="Canvas.Top" Value="{Binding Y}"/>
         </Style>
@@ -20,7 +20,7 @@
             </StackPanel>
         </ToolTip.Tip>
         <StackPanel HorizontalAlignment="Center">
-            <TextBlock>Pod</TextBlock>
+            <TextBlock>PVC</TextBlock>
             <TextBlock FontSize="8" TextWrapping="Wrap">
                 <Run Text="{Binding Name}"></Run>
             </TextBlock>

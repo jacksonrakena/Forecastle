@@ -6,8 +6,13 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Shapes;
+using Avalonia.Media;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Forecastle.Views;
 using k8s;
 using k8s.Models;
 
@@ -20,28 +25,36 @@ public partial class NamespaceInfo : ObservableObject
     [ObservableProperty] private int _podCount;
     [ObservableProperty] private bool _selected = true;
 }
+public record MapNode(Guid Id, double X, double Y, MainViewModel Owner);
+public record PodNode(Guid Id, string Name, string Namespace, double X, double Y, MainViewModel Owner) : MapNode(Id, X, Y, Owner);
 
-public interface Transformable
-{
-    public double X { get; }
-    public double Y { get; }
-}
+public record PersistentVolumeClaimNode(
+    Guid Id,
+    string Name,
+    V1PersistentVolumeClaim PersistentVolumeClaim,
+    double X,
+    double Y,
+    MainViewModel Owner) : MapNode(Id, X, Y, Owner);
 
-public enum MapNodeType { Namespace, Deployment, Pod, PersistentVolumeClaim, PersistentVolume }
-public record MapNode(Guid Id, string Name, MapNodeType mnt, double X, double Y);
-public record PodInfo(string Name, string Namespace, double X, double Y) : Transformable;
+public record PersistentVolumeNode(
+    Guid Id,
+    string Name,
+    V1PersistentVolume PersistentVolume,
+    double X,
+    double Y,
+    MainViewModel Owner) : MapNode(Id, X, Y, Owner);
 
 public partial class MainViewModel : ViewModelBase
 {
     [ObservableProperty] private string _greeting = "Jackson's Very Experimental Kubernetes Manager";
     [ObservableProperty] private ObservableCollection<NamespaceInfo> _namespaces = new ObservableCollection<NamespaceInfo>();
     [ObservableProperty] private string _selectedNamespace;
-    [ObservableProperty] private IList<PodInfo> _pods = new List<PodInfo>();
+    [ObservableProperty] private IList<PodNode> _pods = new List<PodNode>();
     [ObservableProperty] private Kubernetes _kubernetes; 
     [ObservableProperty] private IList<MapNode> _mapNodes = new List<MapNode>();
-    private IList<PodInfo> _allpods = new List<PodInfo>();
-    private IList<V1PersistentVolumeClaim> _allpvcs = new List<V1PersistentVolumeClaim>();
-    private IList<V1PersistentVolume> _allpvs = new List<V1PersistentVolume>();
+    private IList<PodNode> _allpods = new List<PodNode>();
+    private IList<PersistentVolumeClaimNode> _allpvcs = new List<PersistentVolumeClaimNode>();
+    private IList<PersistentVolumeNode> _allpvs = new List<PersistentVolumeNode>();
     private IList<V1Deployment> _alldpl = new List<V1Deployment>();
     
     public void RecalculateVisiblePods(string nst, bool selected)
@@ -52,12 +65,49 @@ public partial class MainViewModel : ViewModelBase
         if (!selected && selectedN.Contains(nst)) selectedN.Remove(nst);
         Console.WriteLine(string.Join(",",selectedN));
         var mn = new List<MapNode>();
-        mn.AddRange(_allpods.Where(e => selectedN.Contains(e.Namespace)).Select(e=>new MapNode(Guid.NewGuid(), e.Name, MapNodeType.Pod, e.X, e.Y)));
-        mn.AddRange(_allpvcs.Where(e => selectedN.Contains(e.Namespace())).Select(p=>new MapNode(Guid.NewGuid(), p.Name(), MapNodeType.PersistentVolumeClaim, r.Next(0,500),r.Next(0,500) )));
-        mn.AddRange(_allpvs.Where(e => selectedN.Contains(e.Namespace())).Select(rx => new MapNode(Guid.NewGuid(), rx.Name(), MapNodeType.PersistentVolume, r.Next(0,500),r.Next(0,500))));
-        mn.AddRange(_alldpl.Where(e => selectedN.Contains(e.Name())).Select(rx => new MapNode(Guid.NewGuid(), rx.Name(), MapNodeType.Deployment, r.Next(0,500),r.Next(0,500))));
+        mn.AddRange(_allpods.Where(e => selectedN.Contains(e.Namespace)));
+        mn.AddRange(_allpvcs.Where(e => selectedN.Contains(e.PersistentVolumeClaim.Namespace())));
+        //mn.AddRange(_allpvcs.Where(e => selectedN.Contains(e.Namespace())).Select(p=>new MapNode(Guid.NewGuid(), MapNodeType.PersistentVolumeClaim, MapNodeType.PersistentVolumeClaim, r.Next(0,500),r.Next(0,500) )));
+        //mn.AddRange(_allpvs.Where(e => selectedN.Contains(e.Namespace())).Select(rx => new MapNode(Guid.NewGuid(), rx.Name(), MapNodeType.PersistentVolume, r.Next(0,500),r.Next(0,500))));
+        //mn.AddRange(_alldpl.Where(e => selectedN.Contains(e.Name())).Select(rx => new MapNode(Guid.NewGuid(), rx.Name(), MapNodeType.Deployment, r.Next(0,500),r.Next(0,500))));
         MapNodes = mn;
         //Pods = _allpods.Where(e => selectedN.Contains(e.Namespace)).ToList();
+    }
+
+    public void OnNodeClicked(MapNode caller)
+    {
+        if (caller is PodNode pi)
+        {
+            try
+            {
+                var window = new LogWindow();
+                window.DataContext = new LogWindowViewModel(pi.Name, pi.Namespace,this);
+                Dispatcher.UIThread.Invoke(() =>
+                {
+                    window.Show(
+                        (((IClassicDesktopStyleApplicationLifetime)Application.Current.ApplicationLifetime)
+                            .MainWindow));
+                });
+            }
+            catch (Exception ed)
+            {
+                Console.WriteLine(ed);
+            }
+        }
+    }
+
+    public void OnTryMoveNode(MapNode caller, TranslateTransform? transform)
+    {
+        if (transform == null)
+        {
+            OnNodeClicked(caller);
+            return;
+        }
+        MapNodes = MapNodes.Select(p =>
+        {
+            if (p.Id == caller.Id) return p with { X = p.X + transform.X, Y = p.Y + transform.Y };
+            return p;
+        }).ToList();
     }
     
     public void InitKubernetes()
@@ -73,11 +123,14 @@ public partial class MainViewModel : ViewModelBase
             Kubernetes = new Kubernetes(config);
 
             var pvcs = await Kubernetes.ListPersistentVolumeClaimForAllNamespacesAsync();
-            _allpvcs = pvcs.Items;
+            _allpvcs = pvcs.Items.Select(e =>
+                new PersistentVolumeClaimNode(Guid.NewGuid(), e.Name(), e, r.Next(0, 500), r.Next(0, 500), this)).ToList();
             Console.WriteLine($"Retrieved {pvcs.Items.Count} pvcs");
 
             var pvs = await Kubernetes.ListPersistentVolumeAsync();
-            _allpvs = pvs.Items;
+            _allpvs = pvs.Items.Select(e =>
+                new PersistentVolumeNode(Guid.NewGuid(), e.Name(), e, r.Next(0, 500), r.Next(0, 500), this)).ToList();
+            
             var dpl = await Kubernetes.ListDeploymentForAllNamespacesAsync();
             _alldpl = dpl.Items;
             foreach (var d in dpl.Items)
@@ -111,7 +164,7 @@ public partial class MainViewModel : ViewModelBase
             }
 
             Namespaces = new ObservableCollection<NamespaceInfo>(nsDetails);
-            _allpods = allpods.Items.Select(e => new PodInfo(e.Name(), e.Namespace(), r.Next(0,500), r.Next(0,500))).ToList();
+            _allpods = allpods.Items.Select(e => new PodNode(Guid.NewGuid(), e.Name(), e.Namespace(), r.Next(0,500), r.Next(0,500), this)).ToList();
             Pods = _allpods;
         });
     }
